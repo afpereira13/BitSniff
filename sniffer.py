@@ -83,12 +83,12 @@ while True:
             		#get data from the packet
             		data = (packet[h_size:])
            	    	aux=""
-			aux+= "Protocol:"+ proto+ 'Source Port : ' + str(source_port) + ' Dest Port : ' + str(dest_port) + ' Sequence Number : ' + str(sequence) + ' Acknowledgement : ' + str(acknowledgement) + ' TCP header length : ' + str(tcph_length) + "\n"
+			aux+= "Protocol:"+ proto+ 'Source Port : ' + str(source_port) + ' Dest Port : ' + str(dest_port)# + ' Sequence Number : ' + str(sequence) + ' Acknowledgement : ' + str(acknowledgement) + ' TCP header length : ' + str(tcph_length) + "\n"
 			aux+= 'Source MAC: '+eth_addr(packet[6:12]) + "\n"
 			aux+= 'Destination MAC:'+eth_addr(packet[0:6]) + "\n"
-			aux+= "Version:" + str(version) + "\n"
-			aux+= "IP Header Length:"+ str(ihl) + "\n"
-			aux+= "TTL:"+ str(ttl) + "\n"
+			#aux+= "Version:" + str(version) + "\n"
+			#aux+= "IP Header Length:"+ str(ihl) + "\n"
+			#aux+= "TTL:"+ str(ttl) + "\n"
 			aux+= "Source Address:"+ str(s_addr) + "\n"
 			aux+= "Destination Address:"+str(d_addr) + "\n"
 			aux+= 'Data : ' + data + "\n\n"
@@ -122,12 +122,12 @@ while True:
 		    	data = (packet[h_size:])
 		     
 			aux=""
-		    	aux+= "Protocol: "+ proto+ ' Source Port : ' + str(source_port) + ' Dest Port : ' + str(dest_port) + ' Length : '+str(length)+' Checksum : '+str(checksum) +"\n"
+		    	aux+= "Protocol: "+ proto+ ' Source Port : ' + str(source_port) + ' Dest Port : ' + str(dest_port)# + ' Length : '+str(length)+' Checksum : '+str(checksum) +"\n"
 			aux+= 'Source MAC: '+eth_addr(packet[6:12]) + "\n"
 			aux+= 'Destination MAC:'+eth_addr(packet[0:6]) + "\n"
-			aux+= "Version:" + str(version) + "\n"
-			aux+= "IP Header Length:"+ str(ihl) + "\n"
-			aux+= "TTL:"+ str(ttl) + "\n"
+			#aux+= "Version:" + str(version) + "\n"
+			#aux+= "IP Header Length:"+ str(ihl) + "\n"
+			#aux+= "TTL:"+ str(ttl) + "\n"
 			aux+= "Source Address:"+ str(s_addr) + "\n"
 			aux+= "Destination Address:"+str(d_addr) + "\n"
 			aux+= 'Data : ' + data + "\n\n"
