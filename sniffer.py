@@ -4,15 +4,28 @@
 import socket, sys
 from struct import *
 import time
- 
+import fcntl
+import struct
+
 #Convert a string of 6 characters of ethernet address into a dash separated hex string
 def eth_addr (a) :
   b = "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x" % (ord(a[0]) , ord(a[1]) , ord(a[2]), ord(a[3]), ord(a[4]) , ord(a[5]))
   return b
  
+
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
+
+
 #define ETH_P_ALL    0x0003          /* Every packet (be careful!!!) */
 try:
     s = socket.socket( socket.AF_PACKET , socket.SOCK_RAW , socket.ntohs(0x0003))
+
 except socket.error , msg:
     print """Socket could not be created. 
     Error Code: {}
@@ -20,6 +33,7 @@ except socket.error , msg:
     
     sys.exit()
 cap_file=open("cap.bs","w+")
+cap_file.write('MY IP: '+str(get_ip_address('wlp2s0')+'\n\n'))
 # receive a packet
 timeBegin = time.time()
 while True:
@@ -95,7 +109,7 @@ while True:
 		aux+= "Source_Address: "+ str(s_addr) + "\n"
 		aux+= "Destination_Address: "+str(d_addr) + "\n"
                 aux+= "Time: "+str(timePacketDiff)+"\n"
-		aux+= 'Data: ' + data + "\n\n"
+		aux+= 'Data Size: ' + str(len(packet)) + "\n\n"
 		cap_file.write(aux)
 	    except:
 		print "Unexpected error:", sys.exc_info()[0]
@@ -125,7 +139,7 @@ while True:
 	     
 		aux=""
 	    	aux+= "Protocol: "+ proto+ ' Source_Port: ' + str(source_port) + ' Dest_Port: ' + str(dest_port)# + ' Length : '+str(length)+' Checksum : '+str(checksum) +"\n"
-		aux+= 'Source_MAC: '+eth_addr(packet[6:12]) + "\n"
+		aux+= '\nSource_MAC: '+eth_addr(packet[6:12]) + "\n"
 		aux+= 'Destination_MAC: '+eth_addr(packet[0:6]) + "\n"
 		#aux+= "Version:" + str(version) + "\n"
 		#aux+= "IP Header Length:"+ str(ihl) + "\n"
@@ -133,7 +147,7 @@ while True:
 		aux+= "Source_Address: "+ str(s_addr) + "\n"
 		aux+= "Destination_Address: "+str(d_addr) + "\n"
                 aux+= "Time: "+str(timePacketDiff)+"\n"
-		aux+= 'Data: ' + data + "\n\n"
+		aux+= 'Data Size: ' + str(len(packet)) + "\n\n"
 		cap_file.write(aux)
 	    except:
 		print "Unexpected error:", sys.exc_info()[0]
