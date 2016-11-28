@@ -3,18 +3,28 @@ import sys
 
 def makeFile(path_read,path_write):
     parse_file = open(path_write,"w+")
+    string_count=1
     string_aux=""
+    count_no_packet=0
     try:
         with open(path_read,"r") as f:
-            for line in f:
-                if line in ['\n',' ']:
-                    string_aux=""
-                else:
+            while(1):
+                line=f.readline()
+                if "MY" in line:
+                    parse_file.write(line)
+                elif string_count>0:
                     string_aux+=line
-                    if "Data" in line:
-                        string_aux+="\n"
-                        if "UDP" in string_aux or "TCP" in string_aux:
-                            parse_file.write(string_aux)
+                    if line in ["", "\n"]:
+                        parse_file.write(string_aux)
+                        string_aux=""
+                        count_no_packet+=1
+                        if count_no_packet==3:
+                            break
+                    else:
+                        count_no_packet=0
+                if count_no_packet==3:
+                    break
+                string_count+=1
     except:
         print "Unexpected error:", sys.exc_info()[0]
 
@@ -36,21 +46,23 @@ def makeDict(list_aux):
 def makeStruct(path_read):
     try:
         with open(path_read,"r") as f:
-            dict_packet={}
             listOfPackets=[]
-            string_aux=""
             list_aux=[]
-            for line in f:
-                if not line in ['\n',' ']:
-                    string_aux=line
-                    if "Data" in line:
-                        list_aux.append(string_aux.split(": "))
-                        if "UDP" in list_aux[0][1] or "TCP" in list_aux[0][1]:
-                            dict_packet = makeDict(list_aux)
-                            listOfPackets.append(dict_packet)
-                    else:
-                        list_aux.append(string_aux.split(" "))
-            print listOfPackets
+            count_no_packet=0
+            while(1):
+                line=f.readline()
+                if not line in ['\n','']:
+                    count_no_packet=0
+                    list_aux.append(line.split(": "))
+                else:
+                    packet_on_dict = makeDict(list_aux)
+                    if bool(packet_on_dict):
+                        listOfPackets.append(makeDict(list_aux))
+                    list_aux=[]
+                    count_no_packet+=1
+                    if count_no_packet==3:
+                        break
+            print len(listOfPackets)
     except:
         print "Unexpected error:", sys.exc_info()[0]
     
