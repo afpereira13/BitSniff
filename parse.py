@@ -43,28 +43,38 @@ def makeDict(list_aux):
     return dict_aux
 
     
-def heuristic1(list_aux):
-    return True
+def heuristic1(packets):
+    return packets
     
-def heuristic2(list_aux):
-    return True
+def heuristic2(packets):
+    return packets
     
-def heuristic3(list_aux):
-    return True
+def heuristic3(packets):
+    return packets
     
-def heuristic4(list_aux):
-    return True
+def heuristic4(packets):
+    return packets
     
-def heuristic5(list_aux):
-    return True
+def heuristic5(packets):
+    return packets
 
-def heuristic6(list_aux):
-    return True
-    
-def heuristics(list_aux):
-    if heuristic1(list_aux) and heuristic2(list_aux) and heuristic3(list_aux) and heuristic4(list_aux) and heuristic5(list_aux) and heuristic6(list_aux):
-        return True
-    return False
+def heuristic6(packets):
+    return packets
+
+### return the packets which we can  consider bittorrent packets
+### by heuristic
+
+### TO DO:
+    ###remove duplicated packets (Return)
+def heuristics(packets):
+    bit_packets=[]
+    bit_packets.append([heuristic1(packets)])
+    bit_packets.append([heuristic2(packets)])
+    bit_packets.append([heuristic3(packets)])
+    bit_packets.append([heuristic4(packets)])
+    bit_packets.append([heuristic5(packets)])
+    bit_packets.append([heuristic6(packets)])
+    return bit_packets
     
 def makeStruct(path_read):
     try:
@@ -78,18 +88,19 @@ def makeStruct(path_read):
                     count_no_packet=0
                     list_aux.append(line.split(": "))
                 else:
-                    if heuristics(list_aux):
-                        packet_on_dict = makeDict(list_aux)
-                        if bool(packet_on_dict):
-                            listOfPackets.append(makeDict(list_aux))
-                        list_aux=[]
+                    packet_on_dict = makeDict(list_aux)
+                    if bool(packet_on_dict):
+                        listOfPackets.append(makeDict(list_aux))
+                    list_aux=[]
                     count_no_packet+=1
                     if count_no_packet==3:
                         break
             print len(listOfPackets), listOfPackets[-1]
+            return listOfPackets
     except:
         print "Unexpected error:", sys.exc_info()[0]
     
     
 #makeFile("cap.bs","bit.bs")
-makeStruct("cap.bs")
+packets = makeStruct("cap.bs")
+heuristics(packets)
