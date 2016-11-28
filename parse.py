@@ -52,12 +52,24 @@ def heuristic2(packets):
 def heuristic3(packets):
     return packets
     
+    
+### those identical flows are from P2P applications if at least 
+### two of each are found
+### flow identities (source_IP, dest_IP, source_port, dest_port, 
+###                                              prot_byte, TOS) 
+### exist in relatively short measurements.     
 def heuristic4(packets):
     return packets
     
+### if an IP uses a TCP/UDP port more than 5 times in the measurement
+### period that {IP,port} pair indicates P2P traffic. The selected
+###upper threshold (5) is a rule of thumb established empirically    
 def heuristic5(packets):
     return packets
 
+    
+### flows are considered P2P flows which have flow size larger than 
+### 1 MB or flow length is longer than 10 minutes
 def heuristic6(packets):
     return packets
 
@@ -101,6 +113,6 @@ def makeStruct(path_read):
         print "Unexpected error:", sys.exc_info()[0]
     
     
-#makeFile("cap.bs","bit.bs")
+makeFile("cap.bs","bit.bs")
 packets = makeStruct("cap.bs")
 heuristics(packets)

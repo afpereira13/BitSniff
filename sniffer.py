@@ -39,7 +39,7 @@ timeBegin = time.time()
 while True:
     packet = s.recvfrom(65565)
     timePacket = time.time()
-    timePacketDiff = (timePacket - timeBegin)/60
+    timePacketDiff = (timePacket - timeBegin)
     #packet string from tuple
     packet = packet[0]
      
@@ -64,7 +64,8 @@ while True:
         ihl = version_ihl & 0xF
  
         iph_length = ihl * 4
- 
+        TOS = iph[1]                       # type of service
+
         ttl = iph[5]
         protocol = iph[6]
         s_addr = socket.inet_ntoa(iph[8]);
@@ -100,7 +101,7 @@ while True:
             	data = (packet[h_size:])
            	aux=""
 		aux=""
-		aux+= "Protocol: "+ proto+ ' Source_Port: ' + str(source_port) + ' Dest_Port: ' + str(dest_port)# + ' Length : '+str(length)+' Checksum : '+str(checksum) +"\n"
+		aux+= "Protocol: "+ proto+ ' TOS: '+ str(TOS) + ' Source_Port: ' + str(source_port) + ' Dest_Port: ' + str(dest_port)# + ' Length : '+str(length)+' Checksum : '+str(checksum) +"\n"
 		aux+= '\nSource_MAC: '+eth_addr(packet[6:12]) + "\n"
 		aux+= 'Destination_MAC: '+eth_addr(packet[0:6]) + "\n"
 		#aux+= "Version:" + str(version) + "\n"
@@ -138,7 +139,7 @@ while True:
 	    	data = (packet[h_size:])
 	     
 		aux=""
-	    	aux+= "Protocol: "+ proto+ ' Source_Port: ' + str(source_port) + ' Dest_Port: ' + str(dest_port)# + ' Length : '+str(length)+' Checksum : '+str(checksum) +"\n"
+	    	aux+= "Protocol: "+ proto+ ' TOS: '+ str(TOS) + ''+ ' Source_Port: ' + str(source_port) + ' Dest_Port: ' + str(dest_port)# + ' Length : '+str(length)+' Checksum : '+str(checksum) +"\n"
 		aux+= '\nSource_MAC: '+eth_addr(packet[6:12]) + "\n"
 		aux+= 'Destination_MAC: '+eth_addr(packet[0:6]) + "\n"
 		#aux+= "Version:" + str(version) + "\n"
