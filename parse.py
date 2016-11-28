@@ -43,6 +43,29 @@ def makeDict(list_aux):
     return dict_aux
 
     
+def heuristic1(list_aux):
+    return True
+    
+def heuristic2(list_aux):
+    return True
+    
+def heuristic3(list_aux):
+    return True
+    
+def heuristic4(list_aux):
+    return True
+    
+def heuristic5(list_aux):
+    return True
+
+def heuristic6(list_aux):
+    return True
+    
+def heuristics(list_aux):
+    if heuristic1(list_aux) and heuristic2(list_aux) and heuristic3(list_aux) and heuristic4(list_aux) and heuristic5(list_aux) and heuristic6(list_aux):
+        return True
+    return False
+    
 def makeStruct(path_read):
     try:
         with open(path_read,"r") as f:
@@ -55,17 +78,18 @@ def makeStruct(path_read):
                     count_no_packet=0
                     list_aux.append(line.split(": "))
                 else:
-                    packet_on_dict = makeDict(list_aux)
-                    if bool(packet_on_dict):
-                        listOfPackets.append(makeDict(list_aux))
-                    list_aux=[]
+                    if heuristics(list_aux):
+                        packet_on_dict = makeDict(list_aux)
+                        if bool(packet_on_dict):
+                            listOfPackets.append(makeDict(list_aux))
+                        list_aux=[]
                     count_no_packet+=1
                     if count_no_packet==3:
                         break
-            print len(listOfPackets)
+            print len(listOfPackets), listOfPackets[-1]
     except:
         print "Unexpected error:", sys.exc_info()[0]
     
     
-makeFile("cap.bs","bit.bs")
+#makeFile("cap.bs","bit.bs")
 makeStruct("cap.bs")
