@@ -72,8 +72,44 @@ def heuristic4(outcoming_packets, incoming_packets, myIP):
 ### period that {IP,port} pair indicates P2P traffic. The selected
 ### upper threshold (5) is a rule of thumb established empirically    
 def heuristic5(outcoming_packets, incoming_packets, myIP):
+    port_numberUses={}
+    max_time_measure=1.000
+    for packet in incoming_packets:
+        if float(packet["Time:"][:-1])>max_time_measure:
+            #print "MAX",max_time_measure,"Heuristic5 Control",port_numberUses
+            for value in port_numberUses.values():
+                if value > 5:
+                    print "Heuristic5 CHECK! Download!", port_numberUses
+                    return True
+            
+            max_time_measure+=1.0
+            port_numberUses={}
+        else:
+            if packet["Dest_Port:"] in port_numberUses:
+                port_numberUses[packet["Dest_Port:"]]+=1
+            else:
+                port_numberUses[packet["Dest_Port:"]]=1
+
+    for packet in outcoming_packets:
+        #print "TIME",packet["Time:"][:-1],"MAX",max_time_measure
+        if float(packet["Time:"][:-1])>max_time_measure:
+            for value in port_numberUses.values():
+                if value > 5:
+                    print "Heuristic5 CHECK! Upload!", port_numberUses
+                    return True
+            max_time_measure+=1.0
+            port_numberUses={}
+        else:
+            if packet["Source_Port:"] in port_numberUses:
+                port_numberUses[packet["Source_Port:"]]+=1
+            else:
+                port_numberUses[packet["Source_Port:"]]=1
     return True
 
+    
+    
+    
+    
 def h6Aux(IO_packets, IOFlag):
     flow={}
     have=0
