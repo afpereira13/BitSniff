@@ -76,8 +76,6 @@ def h4SeeEqualPackets(packets):
         j=i+1
         while(j<len(packets)):
             if cmp(packets[i],packets[j])==0:
-                print "P1",packets[i]
-                print "P2",packets[j]
                 return True
             j+=1
         i+=1
@@ -92,7 +90,7 @@ def heuristic4(outcoming_packets, incoming_packets, myIP):
     for packet in incoming_packets:
         if float(packet["Time:"][:-1])>max_time_measure:
             if h4SeeEqualPackets(list_of_packet):
-                print "Heuristic4 CHECK! Download!",list_of_packet
+                print "Heuristic4 CHECK! Download!"
                 return True
             max_time_measure+=1.0
             list_of_packet=[]
@@ -102,7 +100,7 @@ def heuristic4(outcoming_packets, incoming_packets, myIP):
     for packet in outcoming_packets:
         if float(packet["Time:"][:-1])>max_time_measure:
             if h4SeeEqualPackets(list_of_packet):
-                print "Heuristic4 CHECK! Download!"
+                print "Heuristic4 CHECK! Upload!"
                 return True
             max_time_measure+=1.0
             list_of_packet=[]
@@ -122,9 +120,7 @@ def heuristic5(outcoming_packets, incoming_packets, myIP):
             for value in port_numberUses.values():
                 if value > 5:
                     print "Heuristic5 CHECK! Download!"
-                    
                     return True
-            
             max_time_measure+=1.0
             port_numberUses={}
             port_numberUses[packet["Dest_Port:"]]=1
@@ -234,11 +230,8 @@ def outcoming(packets,IP):
         if packet["Source_Address:"] == IP:
             outcoming_packets.append(packet)
     return outcoming_packets        
-### return the packets which we can  consider bittorrent packets
+### Says if Exist or Not BitTorrent Traffic
 ### by heuristic
-
-### TO DO:
-    ###remove duplicated packets (Return)
 def heuristics(packets, IP, totalPackets, totalNotWebPackets):
     outcoming_packets=outcoming(packets,IP)
     incoming_packets=incoming(packets,IP)
