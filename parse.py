@@ -46,7 +46,7 @@ def makeDict(list_aux):
 def heuristic0(all_packets):
     packets = []
     for packet in all_packets:
-        if packet["Source_Port:"] not in ["80", "443", "8080"] and packet["Dest_Port:"] not in ["80", "443", "8080"]:
+        if packet["Source_Port:"] not in ["80", "443", "8008", "8090", "8080"] and packet["Dest_Port:"] not in ["80", "443", "8008", "8090", "8080"]:
             packets.append(packet)
     return packets
     
@@ -60,12 +60,55 @@ def heuristic3(outcoming_packets, incoming_packets, myIP):
     return True
     
     
+### Auxiliar functions for H4
+def h4CreateNewPacket(packet):
+    new_pack = {}
+    new_pack["TOS:"]=packet["TOS:"]
+    new_pack["Source_Address:"]=packet["Source_Address:"]
+    new_pack["Source_Port:"]=packet["Source_Port:"]
+    new_pack["Destination_Address:"]=packet["Destination_Address:"]
+    new_pack["Dest_Port:"]=packet["Dest_Port:"]
+    return new_pack
+    
+def h4SeeEqualPackets(packets):
+    i=0
+    while (i<len(packets)-1):
+        j=i+1
+        while(j<len(packets)):
+            if cmp(packets[i],packets[j])==0:
+                print "P1",packets[i]
+                print "P2",packets[j]
+                return True
+            j+=1
+        i+=1
+    return False
 ### those identical flows are from P2P applications if at least 
 ### two of each are found
-### flow identities (source_IP, dest_IP, source_port, dest_port, 
-###                                              prot_byte, TOS) 
+### flow identities (source_IP, dest_IP, source_port, dest_port, TOS) 
 ### exist in relatively short measurements.     
 def heuristic4(outcoming_packets, incoming_packets, myIP):
+    list_of_packet=[]
+    max_time_measure=1.000
+    for packet in incoming_packets:
+        if float(packet["Time:"][:-1])>max_time_measure:
+            if h4SeeEqualPackets(list_of_packet):
+                print "Heuristic4 CHECK! Download!",list_of_packet
+                return True
+            max_time_measure+=1.0
+            list_of_packet=[]
+            list_of_packet.append(h4CreateNewPacket(packet))
+        else:
+            list_of_packet.append(h4CreateNewPacket(packet))
+    for packet in outcoming_packets:
+        if float(packet["Time:"][:-1])>max_time_measure:
+            if h4SeeEqualPackets(list_of_packet):
+                print "Heuristic4 CHECK! Download!"
+                return True
+            max_time_measure+=1.0
+            list_of_packet=[]
+            list_of_packet.append(h4CreateNewPacket(packet))
+        else:
+            list_of_packet.append(h4CreateNewPacket(packet))
     return True
     
 ### if an IP uses a TCP/UDP port more than 5 times in the measurement
@@ -76,14 +119,15 @@ def heuristic5(outcoming_packets, incoming_packets, myIP):
     max_time_measure=1.000
     for packet in incoming_packets:
         if float(packet["Time:"][:-1])>max_time_measure:
-            #print "MAX",max_time_measure,"Heuristic5 Control",port_numberUses
             for value in port_numberUses.values():
                 if value > 5:
-                    print "Heuristic5 CHECK! Download!", port_numberUses
+                    print "Heuristic5 CHECK! Download!"
+                    
                     return True
             
             max_time_measure+=1.0
             port_numberUses={}
+            port_numberUses[packet["Dest_Port:"]]=1
         else:
             if packet["Dest_Port:"] in port_numberUses:
                 port_numberUses[packet["Dest_Port:"]]+=1
@@ -95,10 +139,11 @@ def heuristic5(outcoming_packets, incoming_packets, myIP):
         if float(packet["Time:"][:-1])>max_time_measure:
             for value in port_numberUses.values():
                 if value > 5:
-                    print "Heuristic5 CHECK! Upload!", port_numberUses
+                    print "Heuristic5 CHECK! Upload!"
                     return True
             max_time_measure+=1.0
             port_numberUses={}
+            port_numberUses[packet["Dest_Port:"]]=1
         else:
             if packet["Source_Port:"] in port_numberUses:
                 port_numberUses[packet["Source_Port:"]]+=1
@@ -109,7 +154,7 @@ def heuristic5(outcoming_packets, incoming_packets, myIP):
     
     
     
-    
+### Auxiliar function for H6
 def h6Aux(IO_packets, IOFlag):
     flow={}
     have=0
