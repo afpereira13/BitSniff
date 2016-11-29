@@ -43,13 +43,13 @@ def makeDict(list_aux):
     return dict_aux
 
     
-def heuristic1(packets):
+def heuristic1(outcoming_packets, incoming_packets, myIP):
     return True
     
-def heuristic2(packets):
+def heuristic2(outcoming_packets, incoming_packets, myIP):
     return True
     
-def heuristic3(packets):
+def heuristic3(outcoming_packets, incoming_packets, myIP):
     return True
     
     
@@ -58,13 +58,13 @@ def heuristic3(packets):
 ### flow identities (source_IP, dest_IP, source_port, dest_port, 
 ###                                              prot_byte, TOS) 
 ### exist in relatively short measurements.     
-def heuristic4(packets):
+def heuristic4(outcoming_packets, incoming_packets, myIP):
     return True
     
 ### if an IP uses a TCP/UDP port more than 5 times in the measurement
 ### period that {IP,port} pair indicates P2P traffic. The selected
 ### upper threshold (5) is a rule of thumb established empirically    
-def heuristic5(packets):
+def heuristic5(outcoming_packets, incoming_packets, myIP):
     return True
 
     
@@ -77,17 +77,17 @@ def heuristic6(outcoming_packets, incoming_packets, myIP):
 def myIP(packets):
     return packets[0]["MY IP"]
     
-def incoming(packets):
+def incoming(packets,myIP):
     incoming_packets=[]
     for packet in packets[1:]:
-        if packet["Destination_Address"]== myIP:
+        if packet["Destination_Address:"] == myIP:
             incoming_packets.append(packet)    
     return incoming_packets
     
-def outcoming(packets):    
+def outcoming(packets,myIP):    
     outcoming_packets=[]
     for packet in packets[1:]:
-        if packet["Source_Address"]== myIP:
+        if packet["Source_Address:"] == myIP:
             outcoming_packets.append(packet)
     return outcoming_packets        
 ### return the packets which we can  consider bittorrent packets
@@ -96,12 +96,16 @@ def outcoming(packets):
 ### TO DO:
     ###remove duplicated packets (Return)
 def heuristics(packets):
+    IP=myIP(packets)
+    outcoming_packets=outcoming(packets,IP)
+    incoming_packets=incoming(packets,IP)
     if heuristic1(outcoming_packets, incoming_packets, myIP) == True:
         if heuristic2(outcoming_packets, incoming_packets, myIP) == True:
             if heuristic3(outcoming_packets, incoming_packets, myIP) == True:
                 if heuristic4(outcoming_packets, incoming_packets, myIP) == True:
                     if heuristic5(outcoming_packets, incoming_packets, myIP) == True:
                         if heuristic6(outcoming_packets, incoming_packets, myIP) == True:
+                            print "Exist BitTorrent traffic"
                             return True
     return False
     
@@ -115,7 +119,10 @@ def makeStruct(path_read):
                 line=f.readline()
                 if not line in ['\n','']:
                     count_no_packet=0
-                    list_aux.append(line.split(": "))
+                    if "MY IP" in line:
+                        list_aux.append(line.split(": "))
+                    else:
+                        list_aux.append(line.split(" "))
                 else:
                     packet_on_dict = makeDict(list_aux)
                     if bool(packet_on_dict):
@@ -124,7 +131,6 @@ def makeStruct(path_read):
                     count_no_packet+=1
                     if count_no_packet==3:
                         break
-            print len(listOfPackets), listOfPackets[-1]
             return listOfPackets
     except:
         print "Unexpected error:", sys.exc_info()[0]
