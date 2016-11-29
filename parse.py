@@ -44,13 +44,13 @@ def makeDict(list_aux):
 
     
 def heuristic1(packets):
-    return packets
+    return True
     
 def heuristic2(packets):
-    return packets
+    return True
     
 def heuristic3(packets):
-    return packets
+    return True
     
     
 ### those identical flows are from P2P applications if at least 
@@ -59,34 +59,51 @@ def heuristic3(packets):
 ###                                              prot_byte, TOS) 
 ### exist in relatively short measurements.     
 def heuristic4(packets):
-    return packets
+    return True
     
 ### if an IP uses a TCP/UDP port more than 5 times in the measurement
 ### period that {IP,port} pair indicates P2P traffic. The selected
-###upper threshold (5) is a rule of thumb established empirically    
+### upper threshold (5) is a rule of thumb established empirically    
 def heuristic5(packets):
-    return packets
+    return True
 
     
 ### flows are considered P2P flows which have flow size larger than 
 ### 1 MB or flow length is longer than 10 minutes
-def heuristic6(packets):
-    return packets
+def heuristic6(outcoming_packets, incoming_packets, myIP):
+    
+    return True
 
+def myIP(packets):
+    return packets[0]["MY IP"]
+    
+def incoming(packets):
+    incoming_packets=[]
+    for packet in packets[1:]:
+        if packet["Destination_Address"]== myIP:
+            incoming_packets.append(packet)    
+    return incoming_packets
+    
+def outcoming(packets):    
+    outcoming_packets=[]
+    for packet in packets[1:]:
+        if packet["Source_Address"]== myIP:
+            outcoming_packets.append(packet)
+    return outcoming_packets        
 ### return the packets which we can  consider bittorrent packets
 ### by heuristic
 
 ### TO DO:
     ###remove duplicated packets (Return)
 def heuristics(packets):
-    bit_packets=[]
-    bit_packets.append([heuristic1(packets)])
-    bit_packets.append([heuristic2(packets)])
-    bit_packets.append([heuristic3(packets)])
-    bit_packets.append([heuristic4(packets)])
-    bit_packets.append([heuristic5(packets)])
-    bit_packets.append([heuristic6(packets)])
-    return bit_packets
+    if heuristic1(outcoming_packets, incoming_packets, myIP) == True:
+        if heuristic2(outcoming_packets, incoming_packets, myIP) == True:
+            if heuristic3(outcoming_packets, incoming_packets, myIP) == True:
+                if heuristic4(outcoming_packets, incoming_packets, myIP) == True:
+                    if heuristic5(outcoming_packets, incoming_packets, myIP) == True:
+                        if heuristic6(outcoming_packets, incoming_packets, myIP) == True:
+                            return True
+    return False
     
 def makeStruct(path_read):
     try:
