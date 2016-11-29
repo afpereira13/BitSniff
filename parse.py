@@ -42,6 +42,12 @@ def makeDict(list_aux):
                 key=""
     return dict_aux
 
+def heuristic0(all_packets):
+    packets = []
+    for packet in all_packets:
+        if packet["Source_Port:"] not in ["80", "443", "8080"] and packet["Dest_Port:"] not in ["80", "443", "8080"]:
+            packets.append(packet)
+    return packets
     
 def heuristic1(outcoming_packets, incoming_packets, myIP):
     return True
@@ -74,8 +80,8 @@ def heuristic6(outcoming_packets, incoming_packets, myIP):
     
     return True
 
-def myIP(packets):
-    return packets[0]["MY IP"]
+def myIP(packet):
+    return packet["MY IP"]
     
 def incoming(packets,myIP):
     incoming_packets=[]
@@ -95,8 +101,7 @@ def outcoming(packets,myIP):
 
 ### TO DO:
     ###remove duplicated packets (Return)
-def heuristics(packets):
-    IP=myIP(packets)
+def heuristics(packets, IP, totalPackets, totalNotWebPackets):
     outcoming_packets=outcoming(packets,IP)
     incoming_packets=incoming(packets,IP)
     if heuristic1(outcoming_packets, incoming_packets, myIP) == True:
@@ -137,5 +142,10 @@ def makeStruct(path_read):
     
     
 makeFile("cap.bs","bit.bs")
-packets = makeStruct("cap.bs")
-heuristics(packets)
+all_packets = makeStruct("cap.bs")
+totalPackets = len(all_packets)-1 #number of packets captured
+IP=myIP(all_packets[0])
+packets = heuristic0(all_packets[1:])
+totalNotWebPackets = len(packets) #number of packets captured w/out web ports
+heuristics(packets,IP, totalPackets, totalNotWebPackets)
+print "% of not WEB packets",totalNotWebPackets*1.0/totalPackets*100.0
