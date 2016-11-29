@@ -42,6 +42,7 @@ def makeDict(list_aux):
                 key=""
     return dict_aux
 
+### Web ports (80, 443, 8080, etc.) are not among packets desire
 def heuristic0(all_packets):
     packets = []
     for packet in all_packets:
@@ -73,27 +74,83 @@ def heuristic4(outcoming_packets, incoming_packets, myIP):
 def heuristic5(outcoming_packets, incoming_packets, myIP):
     return True
 
+def h6Aux(IO_packets, IOFlag):
+    flow={}
+    have=0
+    IOflows=[]
+    for packet in IO_packets:
+        if len(IOflows)>0:
+            for item in IOflows:
+                if IOFlag=="I":
+                     if item["Source_Address"] == packet["Source_Address:"]:
+                        item["end_time"]=packet["Time:"]
+                        item["Bytes"]+=int(packet["Data Size"][:-1])
+                        item["# packets"]+=1
+                        have=1
+                        break
+                elif IOFlag=="O":
+                    if item["Destination_Address"] == packet["Destination_Address:"]:
+                        item["end_time"]=packet["Time:"]
+                        item["Bytes"]+=int(packet["Data Size"][:-1])
+                        item["# packets"]+=1
+                        have=1
+                        break
+                else:
+                    have=0
+        if have==0:
+            if IOFlag=="I":
+                flow["Source_Address"]=packet["Source_Address:"]
+            else:
+                flow["Destination_Address"]=packet["Destination_Address:"]
+            flow["Bytes"]=int(packet["Data Size"][:-1])
+            flow["init_time"]=packet["Time:"]
+            flow["end_time"]=packet["Time:"]
+            flow["# packets"]=1
+            IOflows.append(flow)
+            flow={}
+    return IOflows
     
 ### flows are considered P2P flows which have flow size larger than 
 ### 1 MB or flow length is longer than 10 minutes
-def heuristic6(outcoming_packets, incoming_packets, myIP):
+def heuristic6(outcoming_packets, incoming_packets, IP):
+    torrent_exist=0
     
+    flows_incoming=[]
+    flows_outcoming=[]
+    
+    flows_outcoming=h6Aux(outcoming_packets,"O")
+    flows_incoming=h6Aux(incoming_packets,"I")
+
+    for packet in flows_outcoming:
+        time_up=float(packet["end_time"][:-1])-float(packet["init_time"][:-1])
+        if packet["Bytes"]>=1000000 or (packet["# packets"]>(int(time_up/10)) and time_up> 600.00):
+            torrent_exist+=1
+            print "BitTorrent flow from",IP[:-1],"to",packet["Destination_Address"]
+    for packet in flows_incoming:
+        time_up=float(packet["end_time"][:-1])-float(packet["init_time"][:-1])
+        if packet["Bytes"]>=1000000 or (packet["# packets"]>(int(time_up/10)) and time_up> 600.00):
+            torrent_exist+=1
+            print "BitTorrent flow from",packet["Source_Address"],"to",IP[:-1]
+    print "# Flows=",torrent_exist
     return True
 
+    
+    
+    
 def myIP(packet):
     return packet["MY IP"]
     
-def incoming(packets,myIP):
+def incoming(packets,IP):
     incoming_packets=[]
     for packet in packets[1:]:
-        if packet["Destination_Address:"] == myIP:
+        if packet["Destination_Address:"] == IP:
             incoming_packets.append(packet)    
     return incoming_packets
     
-def outcoming(packets,myIP):    
+def outcoming(packets,IP):    
     outcoming_packets=[]
     for packet in packets[1:]:
-        if packet["Source_Address:"] == myIP:
+        if packet["Source_Address:"] == IP:
             outcoming_packets.append(packet)
     return outcoming_packets        
 ### return the packets which we can  consider bittorrent packets
@@ -104,12 +161,12 @@ def outcoming(packets,myIP):
 def heuristics(packets, IP, totalPackets, totalNotWebPackets):
     outcoming_packets=outcoming(packets,IP)
     incoming_packets=incoming(packets,IP)
-    if heuristic1(outcoming_packets, incoming_packets, myIP) == True:
-        if heuristic2(outcoming_packets, incoming_packets, myIP) == True:
-            if heuristic3(outcoming_packets, incoming_packets, myIP) == True:
-                if heuristic4(outcoming_packets, incoming_packets, myIP) == True:
-                    if heuristic5(outcoming_packets, incoming_packets, myIP) == True:
-                        if heuristic6(outcoming_packets, incoming_packets, myIP) == True:
+    if heuristic1(outcoming_packets, incoming_packets, IP) == True:
+        if heuristic2(outcoming_packets, incoming_packets, IP) == True:
+            if heuristic3(outcoming_packets, incoming_packets, IP) == True:
+                if heuristic4(outcoming_packets, incoming_packets, IP) == True:
+                    if heuristic5(outcoming_packets, incoming_packets, IP) == True:
+                        if heuristic6(outcoming_packets, incoming_packets, IP) == True:
                             print "Exist BitTorrent traffic"
                             return True
     return False
@@ -124,7 +181,7 @@ def makeStruct(path_read):
                 line=f.readline()
                 if not line in ['\n','']:
                     count_no_packet=0
-                    if "MY IP" in line:
+                    if "MY IP" in line or "Data" in line:
                         list_aux.append(line.split(": "))
                     else:
                         list_aux.append(line.split(" "))
@@ -141,7 +198,7 @@ def makeStruct(path_read):
         print "Unexpected error:", sys.exc_info()[0]
     
     
-makeFile("cap.bs","bit.bs")
+#makeFile("cap.bs","bit.bs")
 all_packets = makeStruct("cap.bs")
 totalPackets = len(all_packets)-1 #number of packets captured
 IP=myIP(all_packets[0])
