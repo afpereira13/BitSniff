@@ -51,13 +51,79 @@ def heuristic0(all_packets):
     return packets
     
 def heuristic1(outcoming_packets, incoming_packets, myIP):
-    return True
-    
+    udp_packets = []
+    tcp_packets= []
+    h1packets=[]
+    for packet in incoming_packets:
+        if (packet["Destination Address:"] == myIP) or (packet["Source Address:"] == myIP):
+            if packet["Protocol:"] == "TCP":
+                tcp_packets.append(packet)
+            else:
+                udp_packets.append(packet)
+    for packet in outcoming_packets:
+        if (packet["Destination Address:"] == myIP) or (packet["Source Address:"] == myIP):
+            if packet["Protocol:"] == "TCP":
+                tcp_packets.append(packet)
+            else:
+                udp_packets.append(packet)
+    for packet_tcp in tcp_packets:
+        for packet_udp in udp_packets:
+            if(packet_tcp["Destination Address:"] == packet_udp["Destination Address:"]) and (packet_tcp["Source Address:"] == packet_udp["Source Address:"]):
+                h1packets.append(packet_tcp)
+                h1packets.append(packet_udp)
+                return True
+            if(packet_tcp["Source Address:"] == packet_udp["Destination Address:"]) and (packet_tcp["Destination Address:"] == packet_udp["Source Address:"]):
+                h1packets.append(packet_tcp)
+                h1packets.append(packet_udp)
+                return True
+
+
 def heuristic2(outcoming_packets, incoming_packets, myIP):
-    return True
-    
+    http_traffic=[]
+    h2packets=[]
+    http_ports=["80", "443", "8080"]
+
+    for packet in incoming_packets:
+        if (packet["Source Address:"] == myIP) and (packet["Source Port:"] in http_ports):
+            h2packets.append(packet)
+        elif (packet["Source Address:"] != myIP) and (packet["Source Port:"] in http_ports):
+            http_traffic.append(packet)
+
+    for packet in outcoming_packets:
+        if (packet["Destination Address:"] == myIP) and (packet["Destination Port:"] in http_ports):
+           h2packets.append(packet)
+        elif (packet["Destination Address:"] != myIP) and (packet["Destination Port:"] in http_ports):
+            http_traffic.append(packet)
+    if len(h2packets) > 0:
+        return True
+
 def heuristic3(outcoming_packets, incoming_packets, myIP):
-    return True
+    h3packets=[]
+    p2p_tcp_ports=["2323","3306","4242","4500","4501","4661","4662","4663","4664","4665","4666","4667","4668","4669","4670","4671",
+                   "4672","4673","4674","4677","4678","7778","1214","1215","1331","1337","1683","4329","6881","6882","6883","6884",
+                   "6885","6886","6887","6888","6889","6346","6347","41170","22321","411","412","4702","4703","4662","6399","19114",
+                   "8081","5555","6666","6677","6688","6699","6700","6701","6257","2234","5534","41170"]
+    p2p_udp_ports=["6388","6733","6777"]
+    i=1364
+    while i <= 1383:
+        p2p_tcp_ports.append(str(i))
+    j=10240
+    while i <= 20480:
+        p2p_tcp_ports.append(str(i))
+
+    for packet in incoming_packets:
+        if (packet["Source Port:"] in p2p_tcp_ports) or (packet["Destination Port:"] in p2p_tcp_ports):
+            h3packets.append(packet)
+        if (packet["Source Port:"] in p2p_udp_ports) or (packet["Destination Port:"] in p2p_udp_ports):
+            h3packets.append(packet)
+    for packet in outcoming_packets:
+        if (packet["Source Port:"] in p2p_tcp_ports) or (packet["Destination Port:"] in p2p_tcp_ports):
+            h3packets.append(packet)
+        if (packet["Source Port:"] in p2p_udp_ports) or (packet["Destination Port:"] in p2p_udp_ports):
+            h3packets.append(packet)
+
+    if len(h3packets) >= 1:
+        return True
     
     
 ### Auxiliar functions for H4
