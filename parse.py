@@ -41,88 +41,67 @@ def makeDict(list_aux):
                 dict_aux[key]=arg
                 key=""
     return dict_aux
-
-### Web ports (80, 443, 8080, etc.) are not among packets desire
-def heuristic0(all_packets):
-    packets = []
-    for packet in all_packets:
-        if packet["Source_Port:"] not in ["80", "443", "8008", "8090", "8080"] and packet["Dest_Port:"] not in ["80", "443", "8008", "8090", "8080"]:
-            packets.append(packet)
-    return packets
     
-def heuristic1(outcoming_packets, incoming_packets, myIP):
+def heuristic1(outcoming_packets, incoming_packets, IP):
     udp_packets = []
     tcp_packets= []
     h1packets=[]
     for packet in incoming_packets:
-        if (packet["Destination Address:"] == myIP) or (packet["Source Address:"] == myIP):
+        if (packet["Destination_Address:"] == IP) or (packet["Source_Address:"] == IP):
             if packet["Protocol:"] == "TCP":
                 tcp_packets.append(packet)
             else:
                 udp_packets.append(packet)
     for packet in outcoming_packets:
-        if (packet["Destination Address:"] == myIP) or (packet["Source Address:"] == myIP):
+        if (packet["Destination_Address:"] == IP) or (packet["Source_Address:"] == IP):
             if packet["Protocol:"] == "TCP":
                 tcp_packets.append(packet)
             else:
                 udp_packets.append(packet)
     for packet_tcp in tcp_packets:
         for packet_udp in udp_packets:
-            if(packet_tcp["Destination Address:"] == packet_udp["Destination Address:"]) and (packet_tcp["Source Address:"] == packet_udp["Source Address:"]):
+            if(packet_tcp["Destination_Address:"] == packet_udp["Destination_Address:"]) and (packet_tcp["Source_Address:"] == packet_udp["Source_Address:"]):
                 h1packets.append(packet_tcp)
                 h1packets.append(packet_udp)
+                print "Heuristic1 -- CHECK!"
                 return True
-            if(packet_tcp["Source Address:"] == packet_udp["Destination Address:"]) and (packet_tcp["Destination Address:"] == packet_udp["Source Address:"]):
+            if(packet_tcp["Source_Address:"] == packet_udp["Destination_Address:"]) and (packet_tcp["Destination_Address:"] == packet_udp["Source_Address:"]):
                 h1packets.append(packet_tcp)
                 h1packets.append(packet_udp)
+                print "Heuristic1 -- CHECK!"
                 return True
 
 
-def heuristic2(outcoming_packets, incoming_packets, myIP):
-    http_traffic=[]
-    h2packets=[]
-    http_ports=["80", "443", "8080"]
-
-    for packet in incoming_packets:
-        if (packet["Source Address:"] == myIP) and (packet["Source Port:"] in http_ports):
-            h2packets.append(packet)
-        elif (packet["Source Address:"] != myIP) and (packet["Source Port:"] in http_ports):
-            http_traffic.append(packet)
-
-    for packet in outcoming_packets:
-        if (packet["Destination Address:"] == myIP) and (packet["Destination Port:"] in http_ports):
-           h2packets.append(packet)
-        elif (packet["Destination Address:"] != myIP) and (packet["Destination Port:"] in http_ports):
-            http_traffic.append(packet)
-    if len(h2packets) > 0:
-        return True
-
-def heuristic3(outcoming_packets, incoming_packets, myIP):
+### Web ports (80, 443, 8080, etc.) are not among packets desire
+def heuristic2(all_packets):
+    packets = []
+    for packet in all_packets:
+        if packet["Source_Port:"] not in ["80", "443", "8008", "8090", "8080"] and packet["Dest_Port:"] not in ["80", "443", "8008", "8090", "8080"]:
+            packets.append(packet)
+    print "Heuristic2 -- CHECK!"
+    print "% of not WEB packets",len(packets)*1.0/len(all_packets)*100.0
+    return packets
+    
+    
+def heuristic3(outcoming_packets, incoming_packets, IP):
     h3packets=[]
-    p2p_tcp_ports=["2323","3306","4242","4500","4501","4661","4662","4663","4664","4665","4666","4667","4668","4669","4670","4671",
-                   "4672","4673","4674","4677","4678","7778","1214","1215","1331","1337","1683","4329","6881","6882","6883","6884",
-                   "6885","6886","6887","6888","6889","6346","6347","41170","22321","411","412","4702","4703","4662","6399","19114",
-                   "8081","5555","6666","6677","6688","6699","6700","6701","6257","2234","5534","41170"]
-    p2p_udp_ports=["6388","6733","6777"]
-    i=1364
-    while i <= 1383:
-        p2p_tcp_ports.append(str(i))
-    j=10240
-    while i <= 20480:
-        p2p_tcp_ports.append(str(i))
-
+    p2p_tcp_ports=["6881","6882","6883","6884",
+                   "6885","6886","6887","6888","6889","51413"]
+    p2p_udp_ports=["51413"]
+    
     for packet in incoming_packets:
-        if (packet["Source Port:"] in p2p_tcp_ports) or (packet["Destination Port:"] in p2p_tcp_ports):
+        if (packet["Source_Port:"] in p2p_tcp_ports) or (packet["Dest_Port:"] in p2p_tcp_ports):
             h3packets.append(packet)
-        if (packet["Source Port:"] in p2p_udp_ports) or (packet["Destination Port:"] in p2p_udp_ports):
+        if (packet["Source_Port:"] in p2p_udp_ports) or (packet["Dest_Port:"] in p2p_udp_ports):
             h3packets.append(packet)
     for packet in outcoming_packets:
-        if (packet["Source Port:"] in p2p_tcp_ports) or (packet["Destination Port:"] in p2p_tcp_ports):
+        if (packet["Source_Port:"] in p2p_tcp_ports) or (packet["Dest_Port:"] in p2p_tcp_ports):
             h3packets.append(packet)
-        if (packet["Source Port:"] in p2p_udp_ports) or (packet["Destination Port:"] in p2p_udp_ports):
+        if (packet["Source_Port:"] in p2p_udp_ports) or (packet["Dest_Port:"] in p2p_udp_ports):
             h3packets.append(packet)
 
     if len(h3packets) >= 1:
+        print "Heuristic3 -- CHECK!"
         return True
     
     
@@ -150,13 +129,13 @@ def h4SeeEqualPackets(packets):
 ### two of each are found
 ### flow identities (source_IP, dest_IP, source_port, dest_port, TOS) 
 ### exist in relatively short measurements.     
-def heuristic4(outcoming_packets, incoming_packets, myIP):
+def heuristic4(outcoming_packets, incoming_packets, IP):
     list_of_packet=[]
     max_time_measure=1.000
     for packet in incoming_packets:
         if float(packet["Time:"][:-1])>max_time_measure:
             if h4SeeEqualPackets(list_of_packet):
-                print "Heuristic4 CHECK! Download!"
+                print "Heuristic4 -- CHECK!"
                 return True
             max_time_measure+=1.0
             list_of_packet=[]
@@ -166,7 +145,7 @@ def heuristic4(outcoming_packets, incoming_packets, myIP):
     for packet in outcoming_packets:
         if float(packet["Time:"][:-1])>max_time_measure:
             if h4SeeEqualPackets(list_of_packet):
-                print "Heuristic4 CHECK! Upload!"
+                print "Heuristic4 -- CHECK!"
                 return True
             max_time_measure+=1.0
             list_of_packet=[]
@@ -178,14 +157,14 @@ def heuristic4(outcoming_packets, incoming_packets, myIP):
 ### if an IP uses a TCP/UDP port more than 5 times in the measurement
 ### period that {IP,port} pair indicates P2P traffic. The selected
 ### upper threshold (5) is a rule of thumb established empirically    
-def heuristic5(outcoming_packets, incoming_packets, myIP):
+def heuristic5(outcoming_packets, incoming_packets, IP):
     port_numberUses={}
     max_time_measure=1.000
     for packet in incoming_packets:
         if float(packet["Time:"][:-1])>max_time_measure:
             for value in port_numberUses.values():
                 if value > 5:
-                    print "Heuristic5 CHECK! Download!"
+                    print "Heuristic5 -- CHECK!"
                     return True
             max_time_measure+=1.0
             port_numberUses={}
@@ -201,7 +180,7 @@ def heuristic5(outcoming_packets, incoming_packets, myIP):
         if float(packet["Time:"][:-1])>max_time_measure:
             for value in port_numberUses.values():
                 if value > 5:
-                    print "Heuristic5 CHECK! Upload!"
+                    print "Heuristic5 -- CHECK!"
                     return True
             max_time_measure+=1.0
             port_numberUses={}
@@ -268,14 +247,16 @@ def heuristic6(outcoming_packets, incoming_packets, IP):
         time_up=float(packet["end_time"][:-1])-float(packet["init_time"][:-1])
         if packet["Bytes"]>=1000000 or (packet["# packets"]>(int(time_up/10)) and time_up> 600.00):
             torrent_exist+=1
+            print "Heuristic6 -- CHECK!"
             print "BitTorrent flow from",IP[:-1],"to",packet["Destination_Address"]
     for packet in flows_incoming:
         time_up=float(packet["end_time"][:-1])-float(packet["init_time"][:-1])
         if packet["Bytes"]>=1000000 or (packet["# packets"]>(int(time_up/10)) and time_up> 600.00):
             torrent_exist+=1
+            print "Heuristic6 -- CHECK!"
             print "BitTorrent flow from",packet["Source_Address"],"to",IP[:-1]
     print "# Flows=",torrent_exist
-    return True
+    return False
 
     
     
@@ -302,13 +283,12 @@ def heuristics(packets, IP, totalPackets, totalNotWebPackets):
     outcoming_packets=outcoming(packets,IP)
     incoming_packets=incoming(packets,IP)
     if heuristic1(outcoming_packets, incoming_packets, IP) == True:
-        if heuristic2(outcoming_packets, incoming_packets, IP) == True:
-            if heuristic3(outcoming_packets, incoming_packets, IP) == True:
-                if heuristic4(outcoming_packets, incoming_packets, IP) == True:
-                    if heuristic5(outcoming_packets, incoming_packets, IP) == True:
-                        if heuristic6(outcoming_packets, incoming_packets, IP) == True:
-                            print "Exist BitTorrent traffic"
-                            return True
+        if heuristic3(outcoming_packets, incoming_packets, IP) == True:
+            if heuristic4(outcoming_packets, incoming_packets, IP) == True:
+                if heuristic5(outcoming_packets, incoming_packets, IP) == True:
+                    if heuristic6(outcoming_packets, incoming_packets, IP) == True:
+                        print "Exist BitTorrent traffic"
+                        return True
     return False
     
 def makeStruct(path_read):
@@ -342,7 +322,6 @@ def makeStruct(path_read):
 all_packets = makeStruct("cap.bs")
 totalPackets = len(all_packets)-1 #number of packets captured
 IP=myIP(all_packets[0])
-packets = heuristic0(all_packets[1:])
+packets = heuristic2(all_packets[1:])
 totalNotWebPackets = len(packets) #number of packets captured w/out web ports
 heuristics(packets,IP, totalPackets, totalNotWebPackets)
-print "% of not WEB packets",totalNotWebPackets*1.0/totalPackets*100.0
