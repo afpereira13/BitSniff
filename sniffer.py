@@ -25,7 +25,6 @@ def get_ip_address(ifname):
 #define ETH_P_ALL    0x0003          /* Every packet (be careful!!!) */
 try:
     s = socket.socket( socket.AF_PACKET , socket.SOCK_RAW , socket.ntohs(0x0003))
-
 except socket.error , msg:
     print """Socket could not be created. 
     Error Code: {}
@@ -36,6 +35,8 @@ cap_file=open("cap.bs","w+")
 cap_file.write('MY IP: '+str(get_ip_address('wlp2s0')+'\n\n'))
 # receive a packet
 timeBegin = time.time()
+pack_total=0
+pack_sniff=0
 while True:
     packet = s.recvfrom(65565)
     timePacket = time.time()
@@ -94,6 +95,8 @@ while True:
 	    doff_reserved = tcph[4]
             tcph_length = doff_reserved >> 4
 	    try:    
+	        pack_total+=1
+	        pack_sniff+=1
 		h_size = eth_length + iph_length + tcph_length * 4
             	data_size = len(packet) - h_size
              
@@ -113,8 +116,10 @@ while True:
 		aux+= 'Data Size: ' + str(len(packet)) + "\n\n"
 		cap_file.write(aux)
 	    except:
+	        print "total packet:",str(pack_total)
+	        print "total packet sniffed:",str(pack_sniff)
 		print "Unexpected error:", sys.exc_info()[0]
-            #print tcp.getTCP(tcp_header)
+          	
             
             	
         #UDP packets
@@ -132,6 +137,8 @@ while True:
 	    length = udph[2]
 	    checksum = udph[3]
 	    try:
+	        pack_total+=1
+	        pack_sniff+=1
 		h_size = eth_length + iph_length + udph_length
 		data_size = len(packet) - h_size
 		
@@ -151,11 +158,14 @@ while True:
 		aux+= 'Data Size: ' + str(len(packet)) + "\n\n"
 		cap_file.write(aux)
 	    except:
+	        print "total packet:",str(pack_total)
+	        print "total packet sniffed:",str(pack_sniff)
 		print "Unexpected error:", sys.exc_info()[0]
-		    
-           
- 
+		
         #some other IP packet like IGMP
         else :
-            print 'Protocol other than TCP/UDP'
+            pack_total+=1
+            print 'Protocol other than TCP/UDP', str(protocol)
         print "-------------NADA--------------"
+	print "total packet:",str(pack_total)
+	print "total packet sniffed:",str(pack_sniff)

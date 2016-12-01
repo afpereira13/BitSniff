@@ -70,16 +70,18 @@ def heuristic1(outcoming_packets, incoming_packets, IP):
                 h1packets.append(packet_udp)
                 print "Heuristic1 -- CHECK!"
                 return True
+    return False
 
 
 ### Web ports (80, 443, 8080, etc.) are not among packets desire
 def heuristic2(all_packets):
     packets = []
+    print "Removing WEB packets..."
     for packet in all_packets:
-        if packet["Source_Port:"] not in ["80", "443", "8008", "8090", "8080"] and packet["Dest_Port:"] not in ["80", "443", "8008", "8090", "8080"]:
+        if packet["Source_Port:"] not in ["53", "80", "443", "8008", "8090", "8080"] and packet["Dest_Port:"] not in ["53", "80", "443", "8008", "8090", "8080"]:
             packets.append(packet)
-    print "Heuristic2 -- CHECK!"
     print "% of not WEB packets",len(packets)*1.0/len(all_packets)*100.0
+    print "Heuristic2 -- CHECK!"
     return packets
     
     
@@ -103,6 +105,7 @@ def heuristic3(outcoming_packets, incoming_packets, IP):
     if len(h3packets) >= 1:
         print "Heuristic3 -- CHECK!"
         return True
+    return False
     
     
 ### Auxiliar functions for H4
@@ -198,13 +201,15 @@ def heuristic5(outcoming_packets, incoming_packets, IP):
 ### Auxiliar function for H6
 def h6Aux(IO_packets, IOFlag):
     flow={}
-    have=0
     IOflows=[]
+    i=1
+    have=0
     for packet in IO_packets:
+        i+=1
         if len(IOflows)>0:
             for item in IOflows:
                 if IOFlag=="I":
-                     if item["Source_Address"] == packet["Source_Address:"]:
+                    if item["Source_Address"][:-1] == packet["Source_Address:"][:-1]:
                         item["end_time"]=packet["Time:"]
                         item["Bytes"]+=int(packet["Data Size"][:-1])
                         item["# packets"]+=1
@@ -217,9 +222,19 @@ def h6Aux(IO_packets, IOFlag):
                         item["# packets"]+=1
                         have=1
                         break
+                have=0
+            if have==0:
+                if IOFlag=="I":
+                    flow["Source_Address"]=packet["Source_Address:"]
                 else:
-                    have=0
-        if have==0:
+                    flow["Destination_Address"]=packet["Destination_Address:"]
+                flow["Bytes"]=int(packet["Data Size"][:-1])
+                flow["init_time"]=packet["Time:"]
+                flow["end_time"]=packet["Time:"]
+                flow["# packets"]=1
+                IOflows.append(flow)
+                flow={}
+        else:
             if IOFlag=="I":
                 flow["Source_Address"]=packet["Source_Address:"]
             else:
@@ -236,27 +251,27 @@ def h6Aux(IO_packets, IOFlag):
 ### 1 MB or flow length is longer than 10 minutes
 def heuristic6(outcoming_packets, incoming_packets, IP):
     torrent_exist=0
-    
     flows_incoming=[]
     flows_outcoming=[]
-    
     flows_outcoming=h6Aux(outcoming_packets,"O")
     flows_incoming=h6Aux(incoming_packets,"I")
-
     for packet in flows_outcoming:
         time_up=float(packet["end_time"][:-1])-float(packet["init_time"][:-1])
         if packet["Bytes"]>=1000000 or (packet["# packets"]>(int(time_up/10)) and time_up> 600.00):
             torrent_exist+=1
+            print "BitTorrent flow from",IP[:-1],"to",packet["Destination_Address"][:-1]
             print "Heuristic6 -- CHECK!"
-            print "BitTorrent flow from",IP[:-1],"to",packet["Destination_Address"]
     for packet in flows_incoming:
         time_up=float(packet["end_time"][:-1])-float(packet["init_time"][:-1])
         if packet["Bytes"]>=1000000 or (packet["# packets"]>(int(time_up/10)) and time_up> 600.00):
             torrent_exist+=1
+            print "BitTorrent flow from",packet["Source_Address"][:-1],"to",IP[:-1]
             print "Heuristic6 -- CHECK!"
-            print "BitTorrent flow from",packet["Source_Address"],"to",IP[:-1]
-    print "# Flows=",torrent_exist
-    return False
+    if torrent_exist>0:
+        print "# Flows=",torrent_exist
+        return True
+    else:
+        return False
 
     
     
